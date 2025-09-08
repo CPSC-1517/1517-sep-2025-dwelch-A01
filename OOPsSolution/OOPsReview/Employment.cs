@@ -82,7 +82,7 @@ namespace OOPsReview
                     //classes typically do not write to the console.
                     //classes will throw Exceptions that must be handled in a 
                     //  user friendly fashion by the outside user
-                    throw new ArgumentException("Title", "Title may not be empty or blank.");
+                    throw new ArgumentNullException("Title", "Title may not be empty or blank.");
                 }
                 else
                 {
@@ -101,7 +101,76 @@ namespace OOPsReview
         ///</summary>
         ///
 
+        public double Years
+        {
+            get
+            {
+                return _Years;
+            }
+            // get => _Years;
+            set
+            {
+                if (value < 0)   //if (value >= 0)  good else message
+                {
+                    throw new ArgumentException($"Year value {value} must be 0 or greater than 0.", "Years");
+                }
+                else
+                {
+                    _Years = value;
+                }
+            }
+        }
+
+        ///<summary>
+        ///Property: StartDate
+        ///validation: none
+        ///set access: private
+        ///</summary>
+        //since the access to this property for the mutator is private ANY validation
+        //  for this data will need to be done elsewhere
+        //possible locations for the validation could be in
+        //  a) a constructor
+        //  b) any method that will alter the data
+        //a private mutator will NOT allow alteration of the data via a property for the
+        //  outside user, however, methods within the class will still be able to
+        //  use the property
+
+        //auto implemented properties do not have additional logic
+        //Auto implemented properties do not have a declared
+        //  data member instead the o/s will create on the property's
+        //  behave a storage that is accessable ONLY by the property
+
+
+        //!!!NOTE: this property is ONLY demonstrating the possibility of using 
+        //         a private access on the set.
+        //         The private access has NO relationship to the fact that the property
+        //         is an auto implemented property
+
+        public DateTime StartDate { get;  private set; }
+
+        ///<summary>
+        ///Property: Level
+        ///validation: none
+        ///datatype: this is an enum (SupervisoryLevel)
+        ///</summary>
+        ///
+
+        public SupervisoryLevel Level { get; set; }
+
+        //can an auto-implemented property be coded as a fully-implemented property?
+        //YES
+
+        //private SupervisoryLevel _Level;
+        //public SupervisoryLevel Level
+        //{
+        //   get {return _Level;}
+        //   set (_Level = value;}
+        //}
+
+
         //constructors
+
+
 
 
         //methods
