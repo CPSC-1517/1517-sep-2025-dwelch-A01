@@ -206,6 +206,76 @@ namespace TDDUnitTesting
 
         #region Properties
         #region valid data
+        //successfully change the FirstName on an instance of Person using a real name via the property
+        [Fact]
+        public void Successfully_Change_FirstName_Via_Property()
+        {
+            //Arrange
+            string expectedFirstName = "Don";
+            //Person sut = new Person();
+            Person sut = new Person("Lowand","Behold",null,null);
+
+            //Act
+            sut.FirstName = "  Don   ";
+
+            //Assert
+            sut.FirstName.Should().Be(expectedFirstName);
+        }
+        [Fact]
+        public void Successfully_Change_LastName_Via_Property()
+        {
+            //Arrange
+            string expectedLastName = "Welch";
+            //Person sut = new Person();
+            Person sut = new Person("Lowand", "Behold", null, null);
+
+            //Act
+            sut.LastName = "  Welch   ";
+
+            //Assert
+            sut.LastName.Should().Be(expectedLastName);
+        }
+        //Successfully change the address via the property
+        [Fact]
+        public void Successfully_Change_Address_Via_Property()
+        {
+            //Arrange
+            ResidentAddress expextedAddress = new ResidentAddress(321, "Oak Ave",
+                                        "St. Albert", "AB", "T7U8I9");
+            Person sut = new Person("Lowan", "Behold",
+                        new ResidentAddress(123, "Maple St.", "Edmonton",
+                                    "AB", "T5R4E3"), null);
+
+            //Act
+            sut.Address = expextedAddress;
+
+            //Assert
+            sut.Address.Should().Be(expextedAddress);
+
+        }
+
+        //consider making EmploymentPositions private set (must use method)
+        //  do we wish to allow the entire employment collection to be replaced?
+        //  consider, is the mutator set to private?
+        //      if so, direct altering is not possible (access trouble)
+        //      if private, any code to actually attempt to use the mutator (set) will NOT even compile
+        //  so even though you my have "brainstormed" this test, it is possible to determind that
+        //      the test is unnecessary
+
+        //full name should return the Person's name using the current instance data (last, first)
+        [Fact]
+        public void Successfully_Return_Instance_FullName_Via_Property()
+        {
+            //Arrange
+            Person sut = new Person("Lowand", "Behold", null, null);
+            string expectedFullName = "Behold, Lowand";
+
+            //Act
+            string fullname = sut.FullName;
+
+            //Assert
+            fullname.Should().Be(expectedFullName);
+        }
         #endregion
         #region exception testing
         #endregion
