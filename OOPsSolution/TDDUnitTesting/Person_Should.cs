@@ -254,6 +254,24 @@ namespace TDDUnitTesting
 
         }
 
+        //Successfully remove the address via the property
+        [Fact]
+        public void Successfully_Remove_Address_Via_Property()
+        {
+            //Arrange
+            
+            Person sut = new Person("Lowan", "Behold",
+                        new ResidentAddress(123, "Maple St.", "Edmonton",
+                                    "AB", "T5R4E3"), null);
+
+            //Act
+            sut.Address = null;
+
+            //Assert
+            sut.Address.Should().BeNull();
+
+        }
+
         //consider making EmploymentPositions private set (must use method)
         //  do we wish to allow the entire employment collection to be replaced?
         //  consider, is the mutator set to private?
@@ -278,11 +296,134 @@ namespace TDDUnitTesting
         }
         #endregion
         #region exception testing
+        //throw ArgumentNullException if first name is missing while change via the property
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("    ")]
+        public void Throw_Exception_Directly_Changing_Firstname_With_Missing_Data(string firstname)
+        {
+            //Arrange
+            Person sut = new Person("Don", "Welch", null, null);
+
+            //Act
+            //the act in this case is the capture of the exception that has been thrown
+            //use () => to indicate that the following delegate is to be executed as the required code
+            Action action = () => sut.FirstName = firstname;
+
+            //Assert
+            //test to see if the expected exception was thrown
+            action.Should().Throw<ArgumentNullException>();
+        }
+        //throw ArgumentNullException if last name is missing while change via the property
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("    ")]
+        public void Throw_Exception_Directly_Changing_Lastname_With_Missing_Data(string lastname)
+        {
+            //Arrange
+            Person sut = new Person("Don", "Welch", null, null);
+
+            //Act
+            //the act in this case is the capture of the exception that has been thrown
+            //use () => to indicate that the following delegate is to be executed as the required code
+            Action action = () => sut.LastName = lastname;
+
+            //Assert
+            //test to see if the expected exception was thrown
+            action.Should().Throw<ArgumentNullException>();
+        }
         #endregion
         #endregion
 
         #region Methods
         #region valid data
+        //can add a new employment instance to collection
+        [Fact]
+        public void Successfully_Add_An_First_Employment_To_Person()
+        {
+            //Arrange 
+            string expectedFirstName = "Don";
+            string expectedLastName = "Welch";
+            Person sut = new Person("Don", "Welch", null, null);
+
+            //Employment one = new Employment("PG I", SupervisoryLevel.TeamMember,
+            //                    DateTime.Parse("2013/10/10"), 6.5);
+            Employment two = new Employment("PG II", SupervisoryLevel.TeamLeader,
+                                DateTime.Parse("2020/04/04"));
+
+
+            List<Employment> expectedEmployments = new List<Employment>();
+            //employments.Add(one);
+            expectedEmployments.Add(two);
+            int expectedEmploymentPositionCount = 1;
+
+            //Act 
+
+            sut.AddEmployment(two);
+
+            //Assert 
+            //sut.FirstName.Should().Be(expectedFirstName);
+            //sut.LastName.Should().Be(expectedLastName);
+            //sut.Address.Should().BeNull();
+            //best practice for a collection is to first test the count to be correct
+            sut.EmploymentPositions.Count().Should().Be(expectedEmploymentPositionCount);
+            //then test the contents of the collection
+            sut.EmploymentPositions.Should().ContainInConsecutiveOrder(expectedEmployments);
+
+        }
+        [Fact]
+        public void Successfully_Add_The_Next_Employment_To_Person()
+        {
+            //Arrange 
+            string expectedFirstName = "Don";
+            string expectedLastName = "Welch";
+
+            //in this method, one needs an existing collection on your instance
+            //  to add another item to your collection
+            Employment one = new Employment("PG I", SupervisoryLevel.TeamMember,
+                               DateTime.Parse("2013/10/10"), 6.5);
+            Employment two = new Employment("PG II", SupervisoryLevel.TeamLeader,
+                                DateTime.Parse("2020/04/04"));
+            List<Employment> employments = new List<Employment>();
+            employments.Add(one);
+            employments.Add(two);
+            Person sut = new Person("Don", "Welch", null, employments);
+
+            //setup the new expected collection
+            //one uses the same unique instances from the sut setup in your 
+            //  expected collection
+
+            List<Employment> expectedEmployments = new List<Employment>();
+            expectedEmployments.Add(one);
+            expectedEmployments.Add(two);
+
+            //setup the next employment instance (the instance to be added)
+            //include the instance int he expected collection
+            Employment newEmployment = new Employment("SUP I", SupervisoryLevel.Supervisor,
+                                DateTime.Today);
+            expectedEmployments.Add(newEmployment);
+            int expectedEmploymentPositionCount = 3;
+
+            //Act 
+
+            sut.AddEmployment(newEmployment);
+
+            //Assert 
+            //the testing of the other fields is optional in this test
+            //this test is concentrating on the collection alteration
+
+            //sut.FirstName.Should().Be(expectedFirstName);
+            //sut.LastName.Should().Be(expectedLastName);
+            //sut.Address.Should().BeNull();
+
+            //best practice for a collection is to first test the count to be correct
+            sut.EmploymentPositions.Count().Should().Be(expectedEmploymentPositionCount);
+            //then test the contents of the collection
+            sut.EmploymentPositions.Should().ContainInConsecutiveOrder(expectedEmployments);
+
+        }
         #endregion
         #region exception testing
         #endregion
