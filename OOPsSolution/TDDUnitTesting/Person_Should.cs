@@ -341,7 +341,7 @@ namespace TDDUnitTesting
         #region valid data
         //can add a new employment instance to collection
         [Fact]
-        public void Successfully_Add_An_First_Employment_To_Person()
+        public void Successfully_Add_A_First_Employment_To_Person()
         {
             //Arrange 
             string expectedFirstName = "Don";
@@ -424,8 +424,92 @@ namespace TDDUnitTesting
             sut.EmploymentPositions.Should().ContainInConsecutiveOrder(expectedEmployments);
 
         }
+
+        [Fact]
+        //successfully change the person's fullname using the method ChangeFullName
+        public void Successfully_Change_FullName_Via_ChangeFullName()
+        {
+            //Arrange
+            Person sut = new Person("Don", "Welch", null, null);
+            string expectedFullName = "Behold, Lowand";
+
+            //Act
+            sut.ChangeFullName("Lowand", "Behold");
+
+            //Assert
+            sut.FullName.Should().Be(expectedFullName);
+        }
         #endregion
         #region exception testing
+        [Theory]
+        [InlineData(null, "Welch")]
+        [InlineData("", "Welch")]
+        [InlineData("    ", "Welch")]
+        [InlineData("Don", null)]
+        [InlineData("Don", "")]
+        [InlineData("Don", "    ")]
+        public void Throw_Exception_Changing_FullName_With_Missing_First_Or_Last_Name(string firstname, string lastname)
+        {
+            //Arrange
+            Person sut = new Person("Don", "Welch", null, null);
+
+            //Act
+            //the act in this case is the capture of the exception that has been thrown
+            //use () => to indicate that the following delegate is to be executed as the required code
+            Action action = () => sut.ChangeFullName(firstname, lastname);
+
+            //Assert
+            //test to see if the expected exception was thrown
+            action.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Throw_Exception_When_Adding_Employment_With_Missing_Data()
+        {
+            //Arrange
+            Person sut = new Person("Don", "Welch", null, null);
+
+            //Act
+            Action action = () => sut.AddEmployment(null);
+
+            //Assert
+            //one can test the contents of the error message being thrown
+            //this is done using the .WithMessage(string)
+            //a substring of the error message can be check using *.....* for the string
+            //one can use string interpolation with the creation of the string
+            action.Should().Throw<ArgumentNullException>().WithMessage("*missing data*");
+           
+
+        }
+
+        [Fact]
+        public void Throw_Exception_On_Adding_Duplicate_Employment_Instance()
+        {
+            //Arrange 
+
+            //in this method, one needs an existing collection on your instance
+            //  to add another item to your collection
+            Employment one = new Employment("PG I", SupervisoryLevel.TeamMember,
+                               DateTime.Parse("2013/10/10"), 6.5);
+            Employment two = new Employment("PG II", SupervisoryLevel.TeamLeader,
+                                DateTime.Parse("2020/04/04"));
+            Employment three = new Employment("SUP I", SupervisoryLevel.Supervisor,
+                               DateTime.Today);
+            List<Employment> employments = new List<Employment>();
+            employments.Add(one);
+            employments.Add(two);
+            employments.Add(three);
+            Person sut = new Person("Don", "Welch", null, employments);
+
+                       
+            //Act 
+
+            Action action = () => sut.AddEmployment(two);
+
+            //Assert 
+            action.Should().Throw<ArgumentException>().WithMessage($"*{two.Title} on {two.StartDate}*");
+
+        }
         #endregion
         #endregion
     }
