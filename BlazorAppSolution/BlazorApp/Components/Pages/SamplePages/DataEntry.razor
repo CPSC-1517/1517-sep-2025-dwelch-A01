@@ -62,7 +62,7 @@ check if there are any error messages, if so display them
 
 @if (errorMsgs.Count > 0)
 {
-    <div class="row alert alert-danger text-center">
+    <div class="row alert alert-danger">
        <p>Please fix the following issues:</p>
        <ul>
            @foreach(var error in errorMsgs)
@@ -211,6 +211,9 @@ each row is stack top to bottom
 </fieldset>
 
 @code {
+
+    //General page variables
+
     private string feedBackMsg = "";
 
     //could be using a List<string> as well as this Dictionary
@@ -225,6 +228,7 @@ each row is stack top to bottom
     Dictionary<int, string> errorMsgs = new();
 
     //Employment Data form variables
+
     private string empTitle = "";
     private double empYears = 0.0;
     private DateTime empStartDate;
@@ -235,6 +239,19 @@ each row is stack top to bottom
     private SupervisoryLevel empLevelS; //this is a datatype under a different namespace
     //when this happens you need to include the missing namespace
     private SupervisoryLevel empLevelR;
+
+    //the variable to hold the current emploment instance for writing to the data file
+    private Employment employment;
+
+
+    //Injection
+
+    //this variable is required if you are using property injection
+    //  for services available from the system which are not normally included
+    //  for use to your application
+    //this service collection will allow us to find the top of your application
+    [Inject]
+    public IWebHostEnvironment webHostEnvironment { get; set; }
 
     protected override void OnInitialized()
     {
@@ -247,7 +264,140 @@ each row is stack top to bottom
     }
     protected void OnCollect()
     {
-        feedBackMsg = $"{empTitle} {empYears} {empStartDate} {empLevelS} {empLevelR}";
+        //clear out old messages
+        feedBackMsg = "";
+        errorMsgs.Clear();
+
+        //primitive validation
+        //  presence
+        //  datatype/pattern (Regex)
+        //  range of values
+
+        //Business Rules (aka your validation requirements)
+        //title must be presence, must have at least one character
+        //start date cannot be in the future
+        //years cannot be less than zero
+
+        //empTitle needs to have at least one character
+        if(string.IsNullOrWhiteSpace(empTitle))
+        {
+            //add a instance to the Dictionary (array)
+            //two values are needed: TKey and TValue
+            errorMsgs.Add(1, "Position title cannot be empty");
+        }
+
+        //start date cannot be in the future
+
+        //concern:
+        // if the empStartDate is filled by some process that include time
+        //      one needs to be careful about using .Today
+        // DateTime.Today uses 00:00:00 am as the time
+        // DateTime.Now uses hh:mm:ss am/pm as the time
+        //Problem is 2025/10/25 08:30:00 am greater than 2025/10/25 00:00:00 am? Answer: YES!!!!!
+        //Solution to ignore the time of the day
+        //  one solution is to add 1 to Today and thus the day will be the start of the next day
+        if (empStartDate >= DateTime.Today.AddDays(1))
+        {
+            //remember in the Dictionary the TKey must be unique
+            errorMsgs.Add(2, "Start date cannot be in the future");
+        }
+
+        //years cannot be less than zero
+        //if (empYears < 0.0)
+        if (!Utilities.IsZeroOrPositive(empYears))
+        {
+
+            errorMsgs.Add(3, "Years cannot be negative.");
+        }
+
+        //is the data good?
+        //should I continue processing this data?
+        if (errorMsgs.Count == 0)
+        {
+            //what to do with the valid data???
+
+            //if you are using a class to collect and hold your data
+            //      you need to be concerned with how the class coding handles
+            //      any errors in creating or processing code within the class
+            //this normally means some type of try/catch processing (user friendly error handling)
+            try
+            {
+                //create an instance of Employment to use to write to the data file
+                //the data file record will use the ToString() of Employment
+                //(Note: you could manually in this method create the concatenated string for
+                //      writing)
+                //Remember if an error occurs while creating your instance, the instance will
+                //  throw an exception; which should be caught by the catches below.
+                employment = new Employment(empTitle, empLevelS, empStartDate, empYears);
+
+                //write the class data as a string to a csv text file
+                // required:
+                // a) know the location of the file (name)
+                // b) the technique to use in writing to the file
+                //    there are several ways to write to the file
+                //      a) StreamWriter/StreamReader
+                //      b) using the System.IO.File methods
+                //           (handles the streaming of the data)
+
+                //there are a couple of ways to refer to your file and its path
+                //  i) obtain the root path of your application using an injection
+                //      service called IWebHostEnvironment via property injection (see variables)
+                //  ii) use relative addressing starting a the top of your application (see report page)
+
+                string appPathName = webHostEnvironment.ContentRootPath; //the top of the application
+
+                //WARNING: the folder slash for your path can be both a forward or back slash
+                //              on a PC BUT for an Apple machine, you must use the forward slash (/)
+                string csvFilePathName = $@"{appPathName}/Components/Data/EmploymentGood.csv";
+
+                //Prep line to write to the file
+
+                //write the data from the employment instance (ToString) as a line to the csv file
+                //since the string does not contain a line feed character, we will need to concatenate
+                //  the character (\n)
+                string line = $"{employment.ToString()}\n";
+
+                //Write to the file
+
+                //WARNING: when you use the System.IO.File you MUST use the
+                //          fully qualified naming to the class method you wish
+                //          to use.
+                //          Fully qualified naming includes namespace.methodOrProperty
+                //         you can not get by just using a reference to the
+                //           namespace at the top of your code (using System.IO;)
+
+
+                //the System.IO.File method will be AppendAllText(filepathname,string)
+                // AppendAllText will
+                //   a) create the file if it does not exist
+                //   b) opens
+                //   c) writes the text
+                //   d) closes
+                System.IO.File.AppendAllText(csvFilePathName, line);
+
+                //talk to your user
+
+                feedBackMsg = "Data has be stored.";
+
+
+            }
+             catch(ArgumentNullException ex)
+            {
+                //is a specific error message for a specific error type
+                errorMsgs.Add(5, $"Data Missing Error: {ex.Message}");
+            }
+             catch(ArgumentException ex)
+            {
+                //is a specific error message for a specific error type
+                errorMsgs.Add(6, $"Bad Data Error: {ex.Message}");
+            }
+            catch(Exception ex)
+            {
+                //is the default general bucket for all error messages
+                errorMsgs.Add(4, $"System Error: {ex.Message}");
+            }
+           
+        }
     }
     protected void OnClear()
     {
