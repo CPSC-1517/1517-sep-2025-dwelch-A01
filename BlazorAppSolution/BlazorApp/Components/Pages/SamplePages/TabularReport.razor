@@ -87,10 +87,25 @@ else if (employments.Count == 0)
 }
 else
 {
+    <!--  c  -->
+    //to reduce the number of data rows being displayed there are two techniques
+    //a) pagination
+    //b) scrolling
+
+    //this example uses the quick and easy technique of scrolling
+    //Note the table is surrounded by a div tag
+    //     on the div tag is 2 parameters
+    //      the class causes the scroll (built into bootstrap)
+    //      the style specifies the height of the display area
+    //to stick the Thead of the table in place
+    //      add the following styling to the thead tag:
+    //          style="position: sticky; top: 0; background-color:white;"
+
+    //depending on the zoom of window you may seem to lose some of the last line
     <div class="row">
-        <div class="offset-2 col-md-8">
-            <table>
-                <thead>
+        <div class="offset-2 col-md-8 overflow-scroll" style="height: 450px">
+            <table class="table table-striped">
+                <thead style="position: sticky; top: 0;">
                     <tr>
                         <th>Title</th>
                         <th>Level</th>
@@ -104,7 +119,7 @@ else
                         <tr>
                             <td>@empRow.Title</td>
                             <td>@empRow.Level</td>
-                            <td>@empRow.StartDate</td>
+                            <td>@empRow.StartDate.ToString("MMM dd, yyyy")</td>
                             <td>@empRow.Years</td>
                         </tr>
                     }
@@ -157,8 +172,8 @@ else
         //how can one setup the filenames for testing
         //hard-code the names
         //string filename = @"./Components/Data/EmploymentGood.csv";
-        string filename = @"./Components/Data/EmploymentEmpty.csv";
-        //string filename = @"./Components/Data/EmploymentGoodBad.csv";  //corrupted handle Exceptions
+        //string filename = @"./Components/Data/EmploymentEmpty.csv";
+        string filename = @"./Components/Data/EmploymentGoodBad.csv";  //corrupted handle Exceptions
         //string filename = @"./Data/FileDoesNotExist.csv"; //bad filename //handle system exception
 
         //get file
@@ -169,14 +184,51 @@ else
             if (System.IO.File.Exists(filename))
             {
                 //file found, process the file
-                feedBackMsg = "file to process";
+                employments = new();  //pretend that an instance of the collection exists.
+                Array userdata = null;
+                Employment employment = null;
+
+                //read the file into the declared collection
+
+                userdata = System.IO.File.ReadAllLines(filename);
+
+                //traverse the array 
+                //ensure that is sufficient data on the line to creat the required instance
+                //create the employment instance
+
+                //the Employment class has in it a method that will validate the
+                //  string is properly formatted and will convert the string to an
+                //  instance of Employment
+                //if the string is not in the correct format, or a validation error
+                //  exists in the data, the Employment class will throw an exception
+                foreach(string line in userdata)
+                {
+                    //convert a line to an instance
+                    employment = Employment.Parse(line);
+
+                    //add the instance to the report collection
+                    employments.Add(employment);
+
+                }
             }
             else
             {
                 errorMsgs.Add($"System Error: File {filename} does not exist.");
             }
         }
-        catch(Exception ex)
+        catch(ArgumentNullException ex)
+        {
+            errorMsgs.Add($"Missing Data Error: {ex.Message}");
+        }
+        catch (ArgumentException ex)
+        {
+            errorMsgs.Add($"Bad Data Error: {ex.Message}");
+        }
+        catch (FormatException ex)
+        {
+            errorMsgs.Add($"Record Format Error: {ex.Message}");
+        }
+        catch (Exception ex)
         {
             errorMsgs.Add($"System Error: {ex.Message}");
         }
