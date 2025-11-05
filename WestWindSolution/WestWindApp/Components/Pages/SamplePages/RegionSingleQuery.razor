@@ -52,7 +52,8 @@
         <input id="regionid" type="number" @bind="entryarg"
             placeholder="enter id" style="width:100px;" />&nbsp;&nbsp;
         <button type="submit" @onclick="GetByEntry"
-                class="btn btn-outline-primary rounded-pill">
+                class="btn btn-outline-primary rounded-pill"
+                style="width:170px">
             Fetch By Entry   
         </button>
 
@@ -72,7 +73,8 @@
             }
         </select>&nbsp;&nbsp;
         <button type="submit" @onclick="GetBySelection"
-                class="btn btn-outline-secondary rounded-pill">
+                class="btn btn-outline-secondary rounded-pill"
+                style="width:170pxpx">
             Fetch By Selection
         </button>
     </div>
@@ -81,6 +83,13 @@
              no output attempt will be done unless the page actually
                 has something to display
         -->
+        @if(info != null)
+        {
+            <p>this is the output display column</p>
+            <br/>
+            <p>Region id: @info.RegionID</p>
+            <p>Region Description: @info.RegionDescription</p>
+        }
     </div>
 </div>
 @code {
@@ -93,6 +102,7 @@
 
     //variables to hold data from database
     private List<Region> regionList = new();
+    private Region info = null;
 
     //inject any needed services
     [Inject]
@@ -110,11 +120,73 @@
     //event methods (the onclick of your buttons)
     public void GetByEntry()
     {
-        
+        //clear all old messages
+        feedBackMsg ="";
+        errorMsgs.Clear();
+
+        //validate incoming data
+        if (entryarg <= 0)
+        {
+            //you can either use feedbackMsg or errorMsgs
+            feedBackMsg = $"Your region {entryarg} is invalid. Enter a value greater than 0.";
+        }
+        else
+        {
+            //remember that you are leaving this project to another system
+            //  which could possible throw an exception
+            //this means that as you consume a service you should remember to
+            //  implement user freindly error handling
+
+            try
+            {
+                //data is deemed valid
+                //consume a service: Region_GetByID
+                info= _regionServices.Region_GetByID(entryarg);
+
+                //remember to communicate with your user
+                if (info == null)
+                {
+                    feedBackMsg = $"There is no data for the region id: {entryarg}";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMsgs.Add($"System Error: {ex.Message}");
+            }
+
+        }
     }
 
     public void GetBySelection()
     {
+        //clear all old messages
+        feedBackMsg ="";
+        errorMsgs.Clear();
 
+        //validate incoming data
+        if (selectionarg == 0) //is the drop down list still on the prompt
+        {
+            //you can either use feedbackMsg or errorMsgs
+            feedBackMsg = $"You must select a region to view.";
+        }
+        else
+        {
+            try
+            {
+                //data is deemed valid
+                //consume a service: Region_GetByID
+                info= _regionServices.Region_GetByID(selectionarg);
+
+                //remember to communicate with your user
+                if (info == null)
+                {
+                    feedBackMsg = $"There is no data for the selected region";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMsgs.Add($"System Error: {ex.Message}");
+            }
+        }
     }
 }
