@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,21 +26,54 @@ namespace WestWindSystem.BLL
         #endregion
 
         #region Query Services
+        //public List<Shipment> Shipment_GetByYearandMonth(int year, int month)
+        //{
+        //    //    //it is possible to place validation of incoming parameters within your services
+        //    //    //remember the services are independent of the outside user
+        //    if(year < 1950 || year > DateTime.Today.Year)
+        //    {
+        //        throw new ArgumentException($"Invalid year {year}. Year must be between 1950 and {DateTime.Today.Year} ");
+        //    }
+        //    if(month < 1 || month >12)
+        //    {
+        //        throw new ArgumentException($"Invalid month {year}. Month must be between 1 and 12 ");
+        //    }
+
+        //    //obtain the database info
+        //    IEnumerable<Shipment> info = _context.Shipments
+        //                                        .Where(x => x.ShippedDate.Year == year
+        //                                                  && x.ShippedDate.Month == month)
+        //                                        .OrderBy(x => x.ShippedDate);
+        //    return info.ToList();
+        //}
+
         public List<Shipment> Shipment_GetByYearandMonth(int year, int month)
         {
-            //    //it is possible to place validation of incoming parameters within your services
-            //    //remember the services are independent of the outside user
-            if(year < 1950 || year > DateTime.Today.Year)
+          
+            if (year < 1950 || year > DateTime.Today.Year)
             {
                 throw new ArgumentException($"Invalid year {year}. Year must be between 1950 and {DateTime.Today.Year} ");
             }
-            if(month < 1 || month >12)
+            if (month < 1 || month >12)
             {
                 throw new ArgumentException($"Invalid month {year}. Month must be between 1 and 12 ");
             }
 
-            //obtain the database info
+            //This uses the technique (b) discussed on the ShipmentTable page
+            //note there is a required using class, see Additional namespaces above.
+            //uses the .Include method to add navigational instances to the return record
+            //note the predicate uses the virtual navigational property of the Shipment entity
+            //This will include the associated record from the Shippers table (parent) for
+            //      the shipment record (child)
+
+            //using this form of the query for scrolling
+            //returns the entire query collection
+
+            //from tableA inner join tableb 
+            //  on tableA.fkeyfield = tableb.pkeyfield
+
             IEnumerable<Shipment> info = _context.Shipments
+                                                .Include(x => x.ShipViaNavigation)
                                                 .Where(x => x.ShippedDate.Year == year
                                                           && x.ShippedDate.Month == month)
                                                 .OrderBy(x => x.ShippedDate);
