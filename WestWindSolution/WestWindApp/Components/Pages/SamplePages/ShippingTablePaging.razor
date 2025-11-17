@@ -136,17 +136,19 @@ using BlazorBootstrap
             </table>
 
             <!--
-              this tag will display 5 page numbers at a time
-              it contains the usual First Previous page numbers Next Last layout
-              HOWEVER, it does not adjust the page numbers to have a continious
-              display of pages like  4 5 6 7 8
-              instead it is 1 2 3 4 5 then 6 7 8 9 10 then 11 12 ..
-              but if you look at the first/last number there is a small space
-                near the top of the display that is empty and can be clicked
-                as if it is the expected ... normally displayed
+                  this tag will display 5 page numbers at a time
+                  it contains the usual First Previous page numbers Next Last layout
+                  HOWEVER, it does not adjust the page numbers to have a continuous
+                  display of pages like  4 5 6 7 8
+                  instead it is 1 2 3 4 5 then 6 7 8 9 10 then 11 12 ..
+                  but if you look at the first/last number there is a small space
+                    near the top of the display that is empty and can be clicked
+                    as if it is the expected ... normally displayed
 
-              remember this control tag is TOTALLY independent of the table
-              -->
+
+
+                  remember this control tag is TOTALLY independent of the table
+                  -->
               <Pagination ActivePageNumber="currentPageNumber"
                           TotalPages="GetTotalPages()"
                           PageChanged="OnPageChanged">
@@ -206,6 +208,9 @@ using BlazorBootstrap
         errorMsgs.Clear();
         shipmentList = null;
 
+        //for Pagination, you will also need to reset the current page number to the first page -> 1;
+        currentPageNumber = 1;
+
         //validate incoming argment values
         //definitely valid if the user can enter data values
         //optional if the data is from a list produced by
@@ -244,7 +249,7 @@ using BlazorBootstrap
                 //obtaining your query contain when NOT using paging
                 //shipmentList = _shipmentServices.Shipment_GetByYearandMonth(yeararg,montharg);
 
-                //obtaining your query contain when using paging
+                //obtaining your query content when using paging
                 //2 additional argument values need to be included
                 //  a) the currentPageNumber
                 //  b) the items per page
