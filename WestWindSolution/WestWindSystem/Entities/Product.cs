@@ -15,29 +15,53 @@ namespace WestWindSystem.Entities;
 [Index("SupplierID", Name = "SuppliersProducts")]
 public partial class Product
 {
+    //if the pkey is not an IDENTITY pkey you will need to add additional
+    //  annotation parameter(s) to your key annotation
+    // DatabaseGenerated()
+    //  values: DatabaseGeneratedOption.None (not a IDENTITY field, user must supply the pkey)
+    //          DatabaseGeneratedOption.IDENTITY (pkey is an IDENTITY field, default, can be added by is optional)
+    //          DatabaseGeneratedOption.Computed (this is used on attributes that are computed from
+    //                                              other record attributes, not seen on Keys
+    //                                               Assume you have attributes price and quantity
+    //                                                      you could compute totalcost = price * quantity
+    //                                             this field does not actually contain data and the entity
+    //                                                 will not expected data to be supplied)
+
+    //Product pkey is an IDENTITY key
+    //[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Key]
     public int ProductID { get; set; }
 
-    [Required]
-    [StringLength(40)]
+    //this annotations are data validaton annotations
+    //these annotations can be used on your web form
+    //the web form needs to be an EditForm
+    //you only need to customize the annotation with a message if you are
+    //  using the entity on the EditForm (maintenance against the entity)
+
+    [Required(ErrorMessage ="Product name is missing. Field is required. ")]
+    [StringLength(40, ErrorMessage = "Product name is limited to 40 characters.")]
     public string ProductName { get; set; }
 
     public int SupplierID { get; set; }
 
     public int CategoryID { get; set; }
 
-    [Required]
-    [StringLength(20)]
+    [Required(ErrorMessage = "Quanity per unit is missing. Field is required. ")]
+    [StringLength(20, ErrorMessage = "Quanity per unit is limited to 20 characters.")]
     public string QuantityPerUnit { get; set; }
 
+    //since the MinimumOrderQuantity is a nullable field,
+    //  the annotation will only execute if a value is in the field
+    [Range(0, 32767 , ErrorMessage ="Minimum order quantity must be between 0 and 32767." )]
     public short? MinimumOrderQuantity { get; set; }
 
     [Column(TypeName = "money")]
     public decimal UnitPrice { get; set; }
 
+    [Range(0, 1000, ErrorMessage = "Minimum order quantity must be greater than 0.")]
     public int UnitsOnOrder { get; set; }
 
-    public bool Discontinued { get; set; }
+     public bool Discontinued { get; set; }
 
     [ForeignKey("CategoryID")]
     [InverseProperty("Products")]
