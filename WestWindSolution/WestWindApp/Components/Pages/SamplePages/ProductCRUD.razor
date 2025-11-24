@@ -152,12 +152,12 @@ this is optional
     // create the variable collections to be used in the
     //      display of foreign key values
 
-    //[Inject]
-    //public CategoryServices _categoryServices {get;set;}
+    [Inject]
+    public CategoryServices _categoryServices {get;set;}
     private List<Category> categoryList = new();
 
-    //[Inject]
-    //public SupplierServices _supplierServices {get;set;}
+    [Inject]
+    public SupplierServices _supplierServices {get;set;}
     private List<Supplier> supplierList = new();
 
     protected override void OnInitialized()
@@ -166,5 +166,8 @@ this is optional
 
         //create the EditContext instance AND tie to the instance of the entity of the form
         editContext = new EditContext(currentProduct);
+
+        categoryList = _categoryServices.Category_GetAll();
+        supplierList = _supplierServices.Supplier_GetAll();
     }
 }
