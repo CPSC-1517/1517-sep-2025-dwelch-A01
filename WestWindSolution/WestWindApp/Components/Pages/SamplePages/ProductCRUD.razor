@@ -1,4 +1,19 @@
-﻿@page "/productcrud"
+﻿@page "/productcrud/{productid:int?}"
+
+<!--
+on the page directive above, a routing parameter has been add 
+            syntax: /routingname/{parametername:datatype}
+this will allow an integer value to be passed to this page
+the routing parameter (productid) needs to be declare in your code area below
+
+if you have the situation where your receive page may or maynot receive a parameter
+value THEN make the datatype nullable (?)
+
+Exception
+
+if your routing parameter is a string, you do NOT need to specify the routing parameter datatype HOWEVER you
+will still want to place a ? (nullable) character at the end of the routing parameter name (eg {StringPkey?})
+-->
 <PageTitle>Product CRUD</PageTitle>
 @rendermode InteractiveServer
 
@@ -162,6 +177,11 @@ this is optional
              </button>
             &nbsp;&nbsp;
             <button type="button" class="btn btn-outline-secondary rounded-pill"
+                    @onclick="OnUpdate" style="width:160px;">
+                Save
+            </button>
+            &nbsp;&nbsp;
+            <button type="button" class="btn btn-outline-secondary rounded-pill"
                     @onclick="OnClear" style="width:160px;">
                 Clear
             </button>
@@ -201,9 +221,27 @@ this is optional
     [Inject]
     public ProductServices _productServices { get; set; }
 
+    //this javascript injection is needed to used the continue dialogue prompt
+    [Inject]
+    protected IJSRuntime jsRuntime { get; set; }
+
+
+    //page level parameter
+    //declare the routing parameter
+    //this property needs a special annotation to indicate it is a parameter
+    //parameter properties need to be accessible by other pages (aka classes)
+    //  therefore they need to be public
+    //IMPORTANT!!!! the datatype on the parameter declaration MUST match the
+    //                  datatype on the page directive
+    [Parameter]
+    public int? productid { get; set; }
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
+
+        if (productid.HasValue)
+            currentProduct = _productServices.Product_GetByProductID(productid.Value);
 
         //create the EditContext instance AND tie to the instance of the entity of the form
         editContext = new EditContext(currentProduct);
@@ -216,6 +254,8 @@ this is optional
 
         categoryList = _categoryServices.Category_GetAll();
         supplierList = _supplierServices.Supplier_GetAll();
+
+
     }
 
     private void OnCreate()
@@ -310,27 +350,99 @@ this is optional
             feedBackMsg = $"System Error: {ex.Message}";
         }
     }
-    private void OnClear()
+
+    private void OnUpdate()
+    {
+        //clear old messages
+        feedBackMsg = "";
+        errorMsgs.Clear();
+        validationMessageStore.Clear();
+
+        try
+        {
+            if (editContext.Validate())
+            {
+                if (currentProduct.CategoryID == 0)
+                {
+                    validationMessageStore.Add(editContext.Field(nameof(currentProduct.CategoryID)),
+                                                "You must select a category.");
+                }
+                if (currentProduct.SupplierID == 0)
+                {
+                    validationMessageStore.Add(editContext.Field(nameof(currentProduct.SupplierID)),
+                                                "You must select a supplier.");
+                }
+                if (currentProduct.UnitPrice < 0.0m)
+                {
+                    validationMessageStore.Add(editContext.Field(nameof(currentProduct.UnitPrice)),
+                                               "Unit Price cannot be negative.");
+                }
+                if (editContext.GetValidationMessages().Any())
+                {
+                    //notify the editcontext that there has been a change to the
+                    //  message store
+                    editContext.NotifyValidationStateChanged();
+                }
+                else
+                {
+                    //call the update service method
+                    int rowsaffected = _productServices.Product_Update(currentProduct);
+
+                    //check the number of rows affected by the update
+                    //Question: DID you ACTUALLY change any records?
+                    //situation: an update was attempted but no records on the database were
+                    //              actually changed AND the action did NOT abort
+                    //in this case rowsafftected = 0
+                    if(rowsaffected == 0)
+                    {
+                        feedBackMsg= $"Product {currentProduct.ProductName} (ID: {currentProduct.ProductID}) changed failed";
+                    }
+                    else
+                    {
+                        feedBackMsg= $"Product {currentProduct.ProductName} (ID: {currentProduct.ProductID}) changed has been applied";
+                    }
+
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            feedBackMsg = $"System Error: {ex.Message}";
+        }
+    }
+
+    //this event will prompt the user to continue by using a javascript dialogue
+    //the program needs to WAIT until the user responses
+    //In this situation, the dialogue should be run in a separate task
+    //NOTE: the return datatype for this instance with be changed to async Task
+    private async Task OnClear()
     {
         //clear old messages
         feedBackMsg = "";
         errorMsgs.Clear();
 
-        //remove any old custom error messages placed in the Validation Message 
-        //      store
-        validationMessageStore.Clear();
+        //setup the prompt message for the dailogue
+        object[] messageline = new object[]
+            {"Clearing the page will lose all unsaved data. Are you sure you wish to continue." };
+        if (await(jsRuntime.InvokeAsync<bool>("confirm",messageline)))
+        {
+            //remove any old custom error messages placed in the Validation Message
+            //      store
+            validationMessageStore.Clear();
 
-        //clear out the old values
-        //clear the current product instance of any data 
-        //      (not using local variables)
-        //notice that the "system" constructor is used as the entity has 
-        //      NO constructor code within it
-        currentProduct = new Product();
+            //clear out the old values
+            //clear the current product instance of any data
+            //      (not using local variables)
+            //notice that the "system" constructor is used as the entity has
+            //      NO constructor code within it
+            currentProduct = new Product();
 
-        // IMPORTANT!!!!!!!!!!!!!!!!!!
-        // the editContext is associated with the current product instance
-        // the editContext REQUIRES to be reset to the NEW current product 
-        //          instance
-        editContext = new EditContext(currentProduct);
+            // IMPORTANT!!!!!!!!!!!!!!!!!!
+            // the editContext is associated with the current product instance
+            // the editContext REQUIRES to be reset to the NEW current product
+            //          instance
+            editContext = new EditContext(currentProduct);
+        }
+       
     }
 }
